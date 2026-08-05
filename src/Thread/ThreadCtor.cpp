@@ -1,7 +1,9 @@
 #include "Thread.h"
 
+#include "Registry/Define/Sex.h"
 #include "Registry/Util/RayCast.h"
 #include "Registry/Util/RayCast/ObjectBound.h"
+#include "Registry/Util/Scale.h"
 #include "Registry/Util/RayCast/Offsets.h"
 #include "Thread/Interface/FurnSelectMenu.h"
 #include "Util/World.h"
@@ -27,6 +29,75 @@ namespace Thread
     {
         const auto centerAct = InitializeReferences(a_submissives);
         const auto fragments = InitializeScenes(a_scenes, a_furniturepref);
+        //开始Loli/Shota过滤
+        size_t loli_counts = 0;
+        size_t shota_counts = 0;
+        bool anyPetiteActor = false;  // 新增标记：是否存在任意幼态角色(Child OR scale<0.88)
+
+        for (auto& pos : positions) {
+            auto* a_actor = pos.data.GetActor();
+            if (!a_actor) {
+                continue;
+            }
+            const auto scale = Registry::Scale::GetSingleton()->GetScale(a_actor);
+            const auto sex = Registry::GetSex(a_actor);
+
+            // 新判定：原生Child 或者 缩放小于0.88
+            const bool isPetiteNew = a_actor->IsChild() || (scale < 0.88f);
+            if (isPetiteNew) {
+                anyPetiteActor = true;
+            }
+
+            // 原有旧判定（fMinScale配置，用于loli/shota计数）
+            const bool isPetiteOld = a_actor->IsChild() || scale < Settings::fMinScale;
+            if (isPetiteOld) {
+                if (sex == Registry::Sex::Male)
+                    shota_counts++;
+                else if (sex == Registry::Sex::Female)
+                    loli_counts++;
+            }
+        }
+
+        const Registry::TagDetails loliTag("loli");
+        const Registry::TagDetails shotaTag("shota");
+
+        // 保存原始完整列表，用于过滤为空时回滚
+        auto& priorityScenes = scenes[SceneType::Custom].empty() ? scenes[SceneType::Primary] : scenes[SceneType::Custom];
+        auto originalScenes = priorityScenes;
+        std::vector<const Registry::Scene*> keepScenes;
+
+        const bool loliPresent = loli_counts > 0;
+        const bool shotaPresent = shota_counts > 0;
+
+        //遍历原始副本，筛选应该保留的场景
+        for (const auto scene : originalScenes) {
+            //每个场景标签只查询一次，缓存结果
+            const bool hasLoliTag = scene->IsCompatibleTags(loliTag);
+            const bool hasShotaTag = scene->IsCompatibleTags(shotaTag);
+
+            bool keep = false;
+            if (!anyPetiteActor) {
+                // ========== 新增分支：没有任何Child / scale<0.88角色 ==========
+                // 过滤所有带有 loli 或 shota标签的场景，只保留不带这两个标签的
+                keep = (!hasLoliTag) && (!hasShotaTag);
+            } else {
+                // ========== 存在幼态角色：沿用原本旧过滤逻辑 ==========
+                keep = (!loliPresent || hasLoliTag) && (!shotaPresent || hasShotaTag);
+            }
+
+            if (keep) {
+                keepScenes.push_back(scene);
+            }
+        }
+
+        if (keepScenes.empty()) {
+            logger::warn("Loli/Shota filter: No compatible scenes found after filtering. Restoring original scene list. anyPetiteActor={}", anyPetiteActor);
+            priorityScenes = std::move(originalScenes);
+        } else {
+            priorityScenes = std::move(keepScenes);
+            logger::info("Loli/Shota filter: Scenes after filtering = {}, anyPetiteActor={}", priorityScenes.size(), anyPetiteActor);
+        }
+        //结束
         InitializeCenter(centerAct, a_furniturepref);
         if (Instance::pendingQst != nullptr) {
             return;  // pending impl handled by FinalizeCenterRefSelection()

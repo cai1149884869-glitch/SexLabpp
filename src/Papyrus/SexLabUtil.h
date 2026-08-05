@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Registry/Util/Scale.h"
+
 namespace Papyrus::SexLabUtil
 {
     bool HasKeywordSub(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_form, std::string_view a_substring);
@@ -26,6 +28,15 @@ namespace Papyrus::SexLabUtil
         "gametimeWidget", "shoutWidget", "resistWidget", "playtimeWidget", "weightWidget", "equipWidget_STB", "STBActiveEffects"
     };
 
+    inline bool IsChild(RE::StaticFunctionTag*, RE::Actor* a_actor)
+    {
+        if (!a_actor)
+            return false;
+
+        return a_actor->IsChild() || Registry::Scale::GetSingleton()->GetScale(a_actor) < Settings::fMinScale;
+    };
+
+
     inline bool Register(VM* a_vm)
     {
         REGISTERFUNC(HasKeywordSub, "SexLabUtil", true);
@@ -42,6 +53,7 @@ namespace Papyrus::SexLabUtil
         REGISTERFUNC(IsGodModeEnabled, "SexLabUtil", true);
         REGISTERFUNC(ShuffleStringArray, "SexLabUtil", true);
         REGISTERFUNC(HideElementsGameHUD, "SexLabUtil", true);
+        REGISTERFUNC(IsChild, "SexLabUtil", true);
 
         return true;
     };

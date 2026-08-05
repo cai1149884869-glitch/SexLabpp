@@ -67,10 +67,10 @@ namespace Registry
             break;
         }
         float basescale = GetScale(a_actor);
-        if (std::abs(basescale - a_absolutescale) < 0.03) {
+        /*if (std::abs(basescale - a_absolutescale) < 0.03) {
             logger::info("Attempted Node Transform to Actor = {:X}, Scale = {} -> {}", a_actor->GetFormID(), basescale, a_absolutescale);
             return;
-        }
+        }*/
 
         const auto base = a_actor->GetActorBase();
         const auto female = base ? base->GetSex() == RE::SEXES::kFemale : false;

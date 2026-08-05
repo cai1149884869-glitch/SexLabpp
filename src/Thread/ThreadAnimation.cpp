@@ -540,7 +540,29 @@ namespace Thread
             if (firstDispatch) {
                 const auto& positionInfo = activeScene->GetNthPosition(pending.position);
                 Collision::CollisionHandler::AddActor(pending.actor->GetFormID());
-                Registry::Scale::GetSingleton()->SetScale(pending.actor, positionInfo->data.GetRace(), positionInfo->data.GetScale());
+
+				 // =====================【移动&新增代码开始】=====================
+                // 每一次Stage派发动画事件，都重新计算目标缩放
+                float targetScale = positionInfo->data.GetScale();
+                bool sceneHasLoliTag = false;
+                bool sceneHasShotaTag = false;
+                if (activeScene) {
+                    sceneHasLoliTag = activeScene->IsCompatibleTags(Registry::TagDetails("loli"));
+                    sceneHasShotaTag = activeScene->IsCompatibleTags(Registry::TagDetails("shota"));
+                }
+
+                // 获取角色原本基础缩放
+                float baseActorScale = Registry::Scale::GetSingleton()->GetScale(pending.actor);
+                bool isPetiteActor = pending.actor->IsChild() || baseActorScale < Settings::fMinScale;
+
+                if ((sceneHasLoliTag || sceneHasShotaTag) && isPetiteActor) {
+                    targetScale = 0.8f;
+                    logger::info("Scene loli/shota tag + petite actor {:X}, force scale to 0.8f", pending.actor->GetFormID());
+                } else if (pending.actor->IsChild()) {
+                    targetScale = 0.8f;
+                }
+
+                Registry::Scale::GetSingleton()->SetScale(pending.actor, positionInfo->data.GetRace(), targetScale);
             }
             ReassertPlacement(pending.position, firstDispatch);
             pending.dispatchAttempts++;

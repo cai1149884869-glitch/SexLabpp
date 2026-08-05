@@ -1,11 +1,35 @@
 #include "Library.h"
 
 #include "Define/RaceKey.h"
+#include "Registry/Util/Scale.h"
 
 namespace Registry
 {
     std::vector<const Scene*> Library::LookupScenes(const std::vector<RE::Actor*>& a_actors, const std::vector<std::string_view>& a_tags, const std::vector<RE::Actor*>& a_submissives) const
     {
+        std::vector<std::string_view> queryTags{ a_tags.begin(), a_tags.end() };
+        uint8_t loli_counts = 0;
+        uint8_t shota_counts = 0;
+        for (auto&& a_actor : a_actors) {
+            if (a_actor->IsChild() || Registry::Scale::GetSingleton()->GetScale(a_actor) < Settings::fMinScale) {
+                if (GetSex(a_actor) == Registry::Sex::Male)
+                    shota_counts++;
+                else if (GetSex(a_actor) == Registry::Sex::Female)
+                    loli_counts++;
+            }
+        }
+        if (loli_counts || shota_counts) {
+            if (loli_counts)
+                queryTags.push_back("loli");
+            else
+                queryTags.push_back("-loli");
+            if (shota_counts)
+                queryTags.push_back("shota");
+            else
+                queryTags.push_back("-shota");
+        }
+
+
         const auto tStart = std::chrono::high_resolution_clock::now();
         ActorFragment::FragmentHash hash;
 #ifndef SKYRIMVR
@@ -24,9 +48,9 @@ namespace Registry
 #ifndef SKYRIMVR
         } };
 #endif
-        TagDetails tags{ a_tags };
-        const auto tagstr = a_tags.empty() ? "[]"s : std::format("[{}]", [&] {
-            return std::accumulate(std::next(a_tags.begin()), a_tags.end(), std::string(a_tags[0]), [](std::string a, std::string_view b) {
+        TagDetails tags{ queryTags };
+        const auto tagstr = queryTags.empty() ? "[]"s : std::format("[{}]", [&] {
+            return std::accumulate(std::next(queryTags.begin()), queryTags.end(), std::string(queryTags[0]), [](std::string a, std::string_view b) {
                 return std::move(a) + ", " + b.data();
             });
         }());

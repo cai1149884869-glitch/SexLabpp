@@ -85,6 +85,9 @@ Actor[] function MakeActorArray(Actor Actor1 = none, Actor Actor2 = none, Actor 
 float function GetCurrentGameRealTime() global native
 bool Function IsGamePausedOrFrozen() native global
 bool Function IsGodModeEnabled() global native
+;新增
+bool Function IsChild(Actor actor = none) global native
+
 String Function GetTranslation(String asStr) global native
 String[] Function ShuffleStringArray(String[] asArray, String asSetFirst = "", int aiMaxLen = 128) native global
 Function HideElementsGameHUD(bool abHide = true) native global
