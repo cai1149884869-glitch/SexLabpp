@@ -12,7 +12,7 @@ namespace Thread::Hooks
             {
                 auto& trampoline = SKSE::GetTrampoline();
                 const auto address = REL::VariantID(35565, 36564, 0x5BAB10).address();
-                const auto offset = REL::VariantOffset(0x748, 0xC26, 0x7EE).offset();
+                const auto offset = REL::VariantOffset(0x748, AE_OFFSET(0xC26, 0xC38), 0x7EE).offset();
 
                 original = trampoline.write_call<5>(address + offset, Thunk);
                 logger::info("Installed frame hook");
@@ -21,8 +21,12 @@ namespace Thread::Hooks
             static void Thunk()
             {
                 static REL::Relocation<float*> deltaTime{ REL::VariantID(523660, 410199, 0x30C3A08) };
-                Instance::UpdateAnimations(*deltaTime);
+                const auto frameDelta = *deltaTime;
+                Instance::UpdateAnimations(frameDelta);
                 original();
+                if (!Util::IsGamePausedOrFrozen()) {
+                    Thread::Interaction::NiSurface::Manager::OnFrameUpdate(frameDelta);
+                }
             }
 
             static inline REL::Relocation<decltype(Thunk)> original;

@@ -520,6 +520,14 @@ bool property ElementThreadConfig hidden
 	  SetSettingBool("bElementThreadConfig", aSet)
 	EndFunction
 EndProperty
+bool property ElementDebugNode hidden
+	bool Function Get()
+	  return GetSettingBool("bElementDebugNode")
+	EndFunction
+	Function Set(bool aSet)
+	  SetSettingBool("bElementDebugNode", aSet)
+	EndFunction
+EndProperty
 
 ; Floats
 float property CumTimer hidden
@@ -1118,14 +1126,6 @@ bool Property InternalEnjoymentEnabled hidden
   EndFunction
   Function Set(bool value)
     SetSettingBool("bInternalEnjoymentEnabled", value)
-  EndFunction
-EndProperty
-bool Property FallbackToTagsForDetection hidden
-  bool Function Get()
-    return GetSettingBool("bFallbackToTagsForDetection")
-  EndFunction
-  Function Set(bool value)
-    SetSettingBool("bFallbackToTagsForDetection", value)
   EndFunction
 EndProperty
 float Property EnjRaiseMultInter hidden

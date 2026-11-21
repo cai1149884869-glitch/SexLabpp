@@ -42,6 +42,13 @@ namespace Thread::Interface
         void RefreshStageOffsets();
         void RebuildSceneList();
 
+        // Debug node overlay. Collision code feeds shapes through these only; the element itself is private to the HUD.
+        [[nodiscard]] bool IsDebugNodeDrawEnabled() const;
+        void DebugNodeDrawBeginFrame();
+        void DebugNodeDrawPublish();
+        void DebugNodeDrawAddRing(const RE::NiPoint3& a_center, const RE::NiPoint3& a_right, const RE::NiPoint3& a_up, float a_radius);
+        void DebugNodeDrawAddTaperedCapsule(const RE::NiPoint3& a_start, const RE::NiPoint3& a_end, float a_startRadius, float a_endRadius);
+
         [[nodiscard]] bool IsActive() const { return _linkedThread != nullptr; }
         [[nodiscard]] bool ShouldRender() const { return IsActive() && !RE::UI::GetSingleton()->GameIsPaused() && _renderEnabled; }
         [[nodiscard]] bool IsFocused() const { return _focused; }

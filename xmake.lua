@@ -1,8 +1,8 @@
-set_xmakever("2.9.5")
+set_xmakever("3.0.0")
 
 -- Globals
 PROJECT_NAME = "SexLabUtil"
-PROJECT_VERSION = "2.18.1"
+PROJECT_VERSION = "2.19.0"
 
 -- Includes
 includes("lib/CommonLibSSE-NG/xmake.lua")
@@ -15,7 +15,7 @@ add_moduledirs("xmake/modules")
 set_project(PROJECT_NAME)
 set_version(PROJECT_VERSION)
 set_languages("cxx23")
-set_license("apache-2.0")
+set_license("GPL-3.0-or-later")
 set_warnings("allextra", "error")
 
 -- Options
@@ -96,14 +96,15 @@ add_requires("yaml-cpp", "magic_enum", "glaze", "simpleini", "glm", "eigen")
 
 -- policies
 set_policy("package.requires_lock", true)
+set_policy("check.auto_ignore_flags", false)
 
 -- rules
-add_rules("mode.debug", "mode.release")
+add_rules("mode.debug", "mode.release", "mode.releasedbg")
 
 set_runtimes("MD")
 add_defines("_ITERATOR_DEBUG_LEVEL=0")
 
-if is_mode("debug") then
+if is_mode("debug") or is_mode("releasedbg") then
     add_defines("DEBUG")
     set_optimize("none")
 elseif is_mode("release") then
@@ -153,6 +154,11 @@ add_rules("common")
 -- Target
 target(PROJECT_NAME)
     set_enabled(get_config("build_dll"))
+    add_installfiles("LICENSE", "NOTICE", "EXCEPTIONS.md", {prefixdir = "SexLab/Licenses"})
+    add_installfiles("licenses/LICENSE-Apache-2.0.txt", {prefixdir = "SexLab/Licenses/licenses"})
+    add_installfiles("lib/CommonLibSSE-NG/COPYING.txt", "lib/CommonLibSSE-NG/EXCEPTIONS.md",
+                     "lib/CommonLibSSE-NG/licenses/LICENSE-MIT.txt", {prefixdir = "SexLab/Licenses/CommonLibSSE-NG"})
+
     -- Dependencies
     add_packages("yaml-cpp", "magic_enum", "glaze", "simpleini", "glm", "eigen")
 
@@ -247,7 +253,7 @@ target("papyrus")
     add_includedirs("$(papyrus_include)/PapyrusUtil SE - Modders Scripting Utility Functions/Source/Scripts")
     add_includedirs("$(papyrus_include)/SkyUI SDK/Source/Scripts")
     add_includedirs("$(papyrus_include)/Race Menu Sources/Source/Scripts")
-    add_includedirs("$(papyrus_include)/MfgFix NG/Source/Scripts")
+    add_includedirs("$(papyrus_include)/Mfg-Fix-NG/Source/Scripts")
     add_includedirs("$(papyrus_include)/VRIK Player Avatar/Source/Scripts")
     add_includedirs("$(papyrus_gamesource)/Source/Scripts")
 
@@ -284,6 +290,7 @@ target("assets")
     set_enabled(get_config("build_assets"))
     set_kind("phony")
 
+    add_installfiles("Readme - SexLab Framework.txt", {prefixdir = "SexLab/Licenses"})
     add_installfiles("dist/(Interface/SexLab/**)")
     add_installfiles("dist/(Interface/Translations/*.txt)")
     add_installfiles("dist/(SKSE/CustomConsole/*.yaml)")
